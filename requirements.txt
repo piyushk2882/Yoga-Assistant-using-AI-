@@ -1,0 +1,14 @@
+pyttsx3 
+playsound
+flask
+gTTs
+unittest2
+numpy
+times
+matplotlib
+pyttsx3
+opencv-python
+mediapipe
+schedule
+tensorflow
+tensorflow_hub

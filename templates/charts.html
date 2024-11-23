@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <link rel="stylesheet" type="text/css" href='{{ url_for('static',filename='styles/charts.css') }}'>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.5.0/Chart.min.js"></script>
+</head>
+<body>
+    <div class="chart2">
+        <canvas id="accuracyChart" style="width: 100%; max-width: 600px"></canvas>
+    </div>
+
+    <div class="content">
+        <ul class="contents">
+            <li>ACCURACY: <span id="currentAccuracy">0</span>%</li>
+            <li>ASANA: <span id="currentPose">None</span></li>
+            <li>DURATION: <span id="duration">0s</span></li>
+            <li>STATUS: <span id="trackingStatus">Not tracking</span></li>
+            <li>X-axis: Time (seconds)</li>
+            <li>Y-axis: Accuracy (%)</li>
+        </ul>
+    </div>
+
+    <script>
+        let accuracyChart;
+        let updateInterval;
+
+        function initChart() {
+            const ctx = document.getElementById('accuracyChart').getContext('2d');
+            accuracyChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Pose Accuracy',
+                        data: [],
+                        borderColor: 'rgb(75, 192, 192)',
+                        tension: 0.1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100
+                        }
+                    },
+                    animation: {
+                        duration: 0
+                    }
+                }
+            });
+
+            // Start continuous updates
+            updateInterval = setInterval(updateChart, 1000);
+        }
+
+        function updateChart() {
+            fetch('/get_accuracy_data')
+                .then(response => response.json())
+                .then(data => {
+                    accuracyChart.data.labels = data.timestamps;
+                    accuracyChart.data.datasets[0].data = data.accuracies;
+                    accuracyChart.update('none'); // Update without animation
+
+                    document.getElementById('currentAccuracy').textContent = 
+                        data.average_accuracy.toFixed(1);
+                    document.getElementById('currentPose').textContent = data.pose;
+                    document.getElementById('duration').textContent = `${data.duration}s`;
+                    document.getElementById('trackingStatus').textContent = 
+                        data.is_tracking ? 'Tracking' : 'Not tracking';
+                    document.getElementById('trackingStatus').style.color = 
+                        data.is_tracking ? 'green' : 'red';
+                });
+        }
+
+        // Initialize the chart when the page loads
+        document.addEventListener('DOMContentLoaded', initChart);
+    </script>
+</body>
+</html>
